@@ -1,0 +1,9 @@
+.custom-btn{
+    transition: background 0.3 ease, color 0.3 ease;
+    background: var(--bg,transparent)
+  }
+
+.custom-btn:hover {
+  background: var(--hover-bg, var(--bg));
+  color:var(--hover-text,inherit)
+}
