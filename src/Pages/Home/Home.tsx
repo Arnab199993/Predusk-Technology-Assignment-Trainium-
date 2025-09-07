@@ -1,8 +1,13 @@
-import Navbar from "../../../Component/Navbar";
-import { CustomSize } from "../../../Constant/Constant";
-import CustomBtn from "../../../Control/CustomBtn/CustomBtn";
-import Features from "../Features/Features";
+import Navbar from "../../Component/Home/Navbar";
+import { CustomSize } from "../../Constant/Constant";
+import CustomBtn from "../../Control/CustomBtn/CustomBtn";
+import Features from "../../Component/Home/Features";
+import { useNavigate } from "react-router-dom";
 const Home = () => {
+  const navigate = useNavigate();
+  const handleGotoChat = () => {
+    navigate("/chat");
+  };
   return (
     <div
       style={{ padding: CustomSize.padding }}
@@ -26,6 +31,7 @@ const Home = () => {
       <div className="flex items-center justify-center mt-4">
         <div>
           <CustomBtn
+            onClick={handleGotoChat}
             hoverBackgroundColor={CustomSize?.hoverColor}
             backgroundColor={CustomSize.primaryColor}
             hoverTextColor="#fff"

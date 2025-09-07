@@ -1,7 +1,7 @@
-import FeatureCard from "../../../Control/Card/FeatureCard";
-import advancedAI from "../../../assets/advancedAI.png";
-import easyIntegration from "../../../assets/easyIntegration.png";
-import privacy from "../../../assets/privacy.png";
+import FeatureCard from "../../Control/Card/FeatureCard";
+import advancedAI from "../../assets/advancedAI.png";
+import easyIntegration from "../../assets/easyIntegration.png";
+import privacy from "../../assets/privacy.png";
 const Features = () => {
   return (
     <div className="grid grid-cols-3 gap-4">

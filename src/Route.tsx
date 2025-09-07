@@ -1,5 +1,5 @@
 import Chat from "./Pages/Chat/Chat";
-import Home from "./Pages/Home/Home/Home";
+import Home from "./Pages/Home/Home";
 
 const RoutePath = [
   {

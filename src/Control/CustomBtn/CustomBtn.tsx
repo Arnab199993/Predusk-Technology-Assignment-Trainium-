@@ -6,6 +6,7 @@ interface customBtnTypes {
   children?: ReactNode;
   hoverBackgroundColor?: string;
   hoverTextColor?: string;
+  onClick?: (event: React.MouseEvent<HTMLElement>) => void;
 }
 const CustomBtn = (props: customBtnTypes) => {
   const {
@@ -14,10 +15,12 @@ const CustomBtn = (props: customBtnTypes) => {
     backgroundColor,
     hoverBackgroundColor,
     hoverTextColor,
+    onClick,
     ...rest
   } = props;
   return (
     <button
+      onClick={onClick}
       {...rest}
       style={
         {

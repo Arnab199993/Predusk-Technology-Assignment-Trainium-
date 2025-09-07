@@ -1,4 +1,4 @@
-import cerebra from "../assets/cerebra.png";
+import cerebra from "../../assets/cerebra.png";
 const Navbar = () => {
   return (
     <div className="flex justify-between">
