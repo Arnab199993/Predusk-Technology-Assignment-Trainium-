@@ -3,8 +3,10 @@ import {
   ChevronDown,
   Copy,
   Download,
+  Moon,
   Paperclip,
   Send,
+  Sun,
   X,
 } from "lucide-react";
 import { CustomSize } from "../../Constant/Constant";
@@ -27,6 +29,7 @@ const Message = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [isDark, setIsDark] = useState<boolean>(false);
 
   const loading = useAppSelector((state) => state.ConversationReducer.loading);
   const error = useAppSelector((state) => state.ConversationReducer.error);
@@ -117,44 +120,93 @@ const Message = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (
+      savedTheme === "dark" ||
+      (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    ) {
+      setIsDark(true);
+      document.documentElement.classList.add("dark");
+    } else {
+      setIsDark(false);
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isDark) {
+      localStorage.setItem("theme", "dark");
+      document.documentElement.classList.add("dark");
+    } else {
+      localStorage.setItem("theme", "light");
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDark]);
+
   if (loading) {
-    return <div className="m-auto">Loading...</div>;
+    return (
+      <div className=" dark:bg-gray-800 dark:text-white w-full">
+        <div className="flex justify-center mt-20">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
   }
   if (error) {
-    return <div className="m-auto">Something went wrong</div>;
+    return (
+      <div className=" dark:bg-gray-800 dark:text-white w-full">
+        <div className="flex justify-center mt-20">
+          <p>Something went wrong</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div
       style={{ padding: CustomSize.padding }}
-      className="w-full h-screen flex flex-col"
+      className="w-full h-screen flex flex-col dark:bg-gray-800 transition-colors duration-300"
     >
-      <div style={{ marginLeft: !isOpen ? "10rem" : "" }}>
-        <div className="flex items-center text-gray-600 leading-0">
-          <div
-            onClick={() => setShowModel((prev) => !prev)}
-            className="cursor-pointer flex items-center hover:bg-gray-100 p-2 rounded-lg"
-          >
-            <span className="text-md ">
-              {model?.name || dummyModels[0]?.name}
-            </span>
-            <span className="mt-[0.2rem]">
-              <ChevronDown size={18} />
-            </span>
+      <div className="flex justify-between items-center">
+        <div style={{ marginLeft: !isOpen ? "10rem" : "" }}>
+          <div className="flex items-center text-gray-600 leading-0">
+            <div
+              onClick={() => setShowModel((prev) => !prev)}
+              className="cursor-pointer flex items-center hover:bg-gray-100 p-2 rounded-lg  dark:text-white hover:dark:text-black"
+            >
+              <span className="text-md ">
+                {model?.name || dummyModels[0]?.name}
+              </span>
+              <span className="mt-[0.2rem]">
+                <ChevronDown size={18} />
+              </span>
+            </div>
           </div>
+          {showModel && (
+            <div className="absolute mt-2 cursor-pointer ">
+              <Models />
+            </div>
+          )}
         </div>
-        {showModel && (
-          <div className="absolute mt-2 cursor-pointer">
-            <Models />
-          </div>
-        )}
+
+        <div
+          onClick={() => setIsDark(!isDark)}
+          className="cursor-pointer p-2 rounded-full hover:bg-gray-200 dark:bg-gray-800 transition-colors duration-300"
+        >
+          {isDark ? (
+            <Moon className="text-blue-600" size={20} />
+          ) : (
+            <Sun className="text-yellow-500" size={20} />
+          )}
+        </div>
       </div>
 
-      <div className="text-center mb-4">{`You are using ${
+      <div className="text-center mb-4 dark:text-white">{`You are using ${
         model?.name || dummyModels[0]?.name
       } now`}</div>
       <div>
-        <h6 className="flex justify-center">
+        <h6 className="flex justify-center dark:text-white">
           {conversation?.title || "No Conversation"}
         </h6>
       </div>
@@ -186,14 +238,14 @@ const Message = () => {
                 <div className="flex gap-2 mt-1">
                   <button
                     onClick={() => handleDownload(msg)}
-                    className="p-1 rounded-full hover:bg-gray-200"
+                    className="p-1 rounded-full hover:bg-gray-200 dark:bg-white"
                   >
                     <Download size={16} />
                   </button>
                   {msg.text && (
                     <button
                       onClick={() => handleCopy(msg.id, msg.text!)}
-                      className="p-1 rounded-full hover:bg-gray-200"
+                      className="p-1 rounded-full hover:bg-gray-200 dark:bg-white"
                     >
                       {copiedId === msg.id ? (
                         <Check size={16} className="text-green-500" />
@@ -208,7 +260,10 @@ const Message = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSendMessage} className="bg-white px-4 py-3">
+        <form
+          onSubmit={handleSendMessage}
+          className="bg-white px-4 py-3 dark:bg-transparent"
+        >
           <div className="border border-gray-300 rounded-2xl overflow-hidden">
             {previewImage && (
               <div className="p-3 bg-gray-50 border-b border-gray-200">
@@ -228,7 +283,7 @@ const Message = () => {
                 </div>
               </div>
             )}
-            <div className="relative">
+            <div className="relative dark:bg-white">
               <textarea
                 value={messageInput}
                 onChange={handleInputChange}
