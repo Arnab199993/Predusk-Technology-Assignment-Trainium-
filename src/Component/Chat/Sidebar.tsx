@@ -3,42 +3,96 @@ import cerebra from "../../assets/cerebra.png";
 import sidebar from "../../assets/sidebar.png";
 import { useAppDispatch, useAppSelector } from "../../Hooks/Hooks";
 import SliderControlSlice from "../../Redux/SliderControlSlice";
-import { dummyConversations } from "../../Core/Conversation";
 import conversationSlice from "../../Redux/ConversationSlice";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  initializeConversations,
+  addNewConversation,
+} from "../../Core/Conversation";
 
 const Sidebar = () => {
   const dispatch = useAppDispatch();
-  const [selectedId, setSelectedId] = useState<number>(1);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
   const isOpen = useAppSelector(
     (state) => state.SliderControlReducer.isSidebarOpen
   );
+  const conversations = useAppSelector(
+    (state) => state.ConversationReducer.conversations
+  );
+  const selectedConversationId = useAppSelector(
+    (state) => state.ConversationReducer.selectedId
+  );
+  const loading = useAppSelector((state) => state.ConversationReducer.loading);
+
+  useEffect(() => {
+    const initialConversations = initializeConversations();
+    dispatch(
+      conversationSlice.actions.initializeConversations(initialConversations)
+    );
+
+    if (initialConversations.length > 0 && !selectedConversationId) {
+      setSelectedId(initialConversations[0].id);
+      dispatch(
+        conversationSlice.actions.selectConversation(initialConversations[0].id)
+      );
+    }
+  }, [dispatch, selectedConversationId]);
 
   const handleSidebarOpener = () => {
     dispatch(SliderControlSlice.actions.setShowSidebar(!isOpen));
   };
 
   const handleConversationClick = async (id: number) => {
+    if (loading) return;
+
     setSelectedId(id);
     dispatch(conversationSlice.actions.setLoading(true));
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    dispatch(conversationSlice?.actions?.select(id));
-    dispatch(conversationSlice.actions.setLoading(false));
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      dispatch(conversationSlice.actions.selectConversation(id));
+    } catch (error) {
+      dispatch(
+        conversationSlice.actions.setError("Failed to load conversation")
+      );
+    } finally {
+      dispatch(conversationSlice.actions.setLoading(false));
+    }
   };
 
-  console.log("selectedIddd", selectedId);
+  const handleNewChat = () => {
+    const newConversation = addNewConversation();
+    dispatch(conversationSlice.actions.addNewConversation(newConversation));
+    setSelectedId(newConversation.id);
+  };
+
+  const formatTime = (timestamp: number) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } else {
+      return date.toLocaleDateString([], { month: "short", day: "numeric" });
+    }
+  };
 
   return (
     <>
-      <div className="dark:border-r-white border-r border-transparent bg-gradient-to-br from-gray-100 to-gray-200">
+      <div className="dark:border-r-white border-r border-transparent bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
         <div
           className={`${
             isOpen ? "w-64" : "w-0"
-          } h-screen  flex flex-col transition-all duration-300 overflow-hidden  dark:bg-gray-800`}
+          } h-screen flex flex-col transition-all duration-300 overflow-hidden dark:bg-gray-800`}
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-400 shrink-0 ">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-400 dark:border-gray-600 shrink-0">
             <div className="flex items-center">
-              <div className="h-10 w-10 ">
+              <div className="h-10 w-10">
                 <img className="h-full" src={cerebra} alt="logo" />
               </div>
               <div className="ml-1 text-[#3B82F6]">
@@ -51,67 +105,71 @@ const Sidebar = () => {
             </div>
             <div
               onClick={handleSidebarOpener}
-              className="h-9 w-9 hover:bg-gray-200 cursor-pointer p-2 rounded-full dark:bg-white"
+              className="h-9 w-9 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer p-2 rounded-full transition-colors"
             >
-              <img className="h-full" src={sidebar} />
+              <img className="h-full" src={sidebar} alt="Toggle sidebar" />
             </div>
           </div>
 
           <div className="flex-1 flex flex-col px-3 py-4 overflow-y-auto scrollbar-hide">
             <button
-              className="flex items-center gap-3 w-full px-3 py-2 mb-3 text-sm rounded-lg bg-white hover:shadow-lg shrink-0 cursor-pointer"
-              onClick={() => {
-                const newId = Date.now();
-                const newConversation = {
-                  id: newId,
-                  title: `New chat ${dummyConversations.length + 1}`,
-                  messages: [],
-                };
-                dummyConversations.unshift(newConversation);
-                setSelectedId(newId);
-                dispatch(conversationSlice.actions.select(newId));
-              }}
+              className="flex items-center gap-3 w-full px-3 py-2 mb-3 text-sm rounded-lg bg-white dark:bg-gray-700 hover:shadow-lg shrink-0 cursor-pointer transition-all duration-200 dark:text-white"
+              onClick={handleNewChat}
+              disabled={loading}
             >
               <Plus size={18} />
               <span>{isOpen && "New Chat"}</span>
             </button>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <p
                 className={`${
                   isOpen ? "block" : "hidden"
-                } text-xs text-gray-400 mb-2`}
+                } text-xs text-gray-400 dark:text-gray-500 mb-2 px-2`}
               >
-                Recent
+                Recent Conversations
               </p>
-              {dummyConversations.map((convo) => (
-                <>
-                  {convo.id === selectedId ? (
-                    <div
-                      key={convo.id}
-                      onClick={() => handleConversationClick(convo.id)}
-                      className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-gray-200 cursor-pointer text-[#3B82F6] dark:hover:text-black"
-                    >
-                      <MessageSquare size={18} />
-                      {isOpen && convo.title}
+              {conversations.map((convo) => (
+                <div
+                  key={convo.id}
+                  onClick={() => handleConversationClick(convo.id)}
+                  className={`flex items-center justify-between group px-2 py-2 text-sm rounded-lg cursor-pointer transition-all duration-200 ${
+                    selectedId === convo.id
+                      ? "bg-blue-100 dark:bg-blue-900 text-[#3B82F6]"
+                      : "hover:bg-gray-200 dark:hover:bg-gray-700 text-black dark:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <MessageSquare size={16} />
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate font-medium">{convo.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {convo.messages.length > 0
+                          ? `${convo.messages.length} messages • ${formatTime(
+                              convo.updatedAt
+                            )}`
+                          : `Created ${formatTime(convo.createdAt)}`}
+                      </p>
                     </div>
-                  ) : (
-                    <div
-                      key={convo.id}
-                      onClick={() => handleConversationClick(convo.id)}
-                      className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-gray-200 cursor-pointer text-black dark:text-white dark:hover:text-black"
-                    >
-                      <MessageSquare size={18} />
-                      {isOpen && convo.title}
-                    </div>
-                  )}
-                </>
+                  </div>
+                </div>
               ))}
+
+              {conversations.length === 0 && (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <MessageSquare
+                    size={32}
+                    className="mx-auto mb-2 opacity-50"
+                  />
+                  <p className="text-sm">No conversations yet</p>
+                  <p className="text-xs">Start a new chat to begin</p>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="px-3 py-4 border-t border-gray-400 shrink-0 dark:text-white dark:hover:text-black">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-200 cursor-pointer">
+          <div className="px-3 py-4 border-t border-gray-400 dark:border-gray-600 shrink-0">
+            <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer transition-colors dark:text-white">
               <Settings size={18} />
               {isOpen && "Settings"}
             </div>
@@ -119,7 +177,7 @@ const Sidebar = () => {
         </div>
 
         {!isOpen && (
-          <div className="fixed top-3 left-3 flex items-center gap-3 bg-white p-2 rounded-xl shadow-md">
+          <div className="fixed top-3 left-3 flex items-center gap-2 bg-white dark:bg-gray-700 p-2 rounded-xl shadow-md dark:shadow-gray-900">
             <div
               onClick={handleSidebarOpener}
               className="h-10 w-10 cursor-pointer"
@@ -129,24 +187,15 @@ const Sidebar = () => {
 
             <div
               onClick={handleSidebarOpener}
-              className="h-9 w-9 hover:bg-gray-200 cursor-pointer p-2 rounded-full"
+              className="h-9 w-9 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer p-2 rounded-full transition-colors"
             >
-              <img className="h-full" src={sidebar} />
+              <img className="h-full" src={sidebar} alt="Toggle sidebar" />
             </div>
 
             <button
-              onClick={() => {
-                const newId = Date.now();
-                const newConversation = {
-                  id: newId,
-                  title: `New chat ${dummyConversations.length + 1}`,
-                  messages: [],
-                };
-                dummyConversations.unshift(newConversation);
-                setSelectedId(newId);
-                dispatch(conversationSlice.actions.select(newId));
-              }}
-              className="p-2 rounded-full hover:bg-gray-200 cursor-pointer"
+              onClick={handleNewChat}
+              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+              title="New Chat"
             >
               <Plus size={18} />
             </button>

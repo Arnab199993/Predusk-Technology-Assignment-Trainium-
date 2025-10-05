@@ -7,7 +7,11 @@ const App = () => {
       <Routes>
         {RoutePath?.map((route) => (
           <>
-            <Route path={route?.path} element={route?.element} />
+            <Route
+              key={route?.path}
+              path={route?.path}
+              element={route?.element}
+            />
           </>
         ))}
       </Routes>
